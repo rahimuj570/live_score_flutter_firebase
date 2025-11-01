@@ -15,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailTEC = TextEditingController();
   final TextEditingController passwordTEC = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool processing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,18 +60,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      login();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(),
+                Visibility(
+                  visible: !processing,
+                  replacement: CircularProgressIndicator(),
+                  child: FilledButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        login();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(),
+                    ),
+                    child: Text('Login'),
                   ),
-                  child: Text('Login'),
                 ),
                 SizedBox(height: 20),
                 RichText(
@@ -109,6 +114,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> login() async {
+    processing = true;
+    setState(() {});
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailTEC.text.trim(),
@@ -117,14 +124,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // print(emailTEC.text);
       // print(passwordTEC.text);
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
       );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-credential') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No user found for that email.')),
+          SnackBar(content: Text('No user found for that credential.')),
         );
       } else if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -133,6 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         print("sssssssssssssssssssssss:  " + e.toString());
       }
+    } finally {
+      processing = false;
+      setState(() {});
     }
   }
 }

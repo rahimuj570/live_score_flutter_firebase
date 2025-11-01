@@ -15,6 +15,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailTEC = TextEditingController();
   final TextEditingController passwordTEC = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool processing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -71,18 +72,22 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      signUp();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(),
+                Visibility(
+                  visible: !processing,
+                  replacement: CircularProgressIndicator(),
+                  child: FilledButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        signUp();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(),
+                    ),
+                    child: Text('Sign up'),
                   ),
-                  child: Text('Sign up'),
                 ),
                 SizedBox(height: 20),
                 RichText(
@@ -121,6 +126,8 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> signUp() async {
+    processing = true;
+    setState(() {});
     try {
       final credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
@@ -163,6 +170,9 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      processing = false;
+      setState(() {});
     }
   }
 }
