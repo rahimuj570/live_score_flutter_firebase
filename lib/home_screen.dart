@@ -1,0 +1,97 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchData();
+  }
+
+  final List<FootballMatch> data = [];
+  Future<void> fetchData() async {
+    data.clear();
+    final snaphot = await FirebaseFirestore.instance
+        .collection('football_score')
+        .get();
+    print("Documents found: ${snaphot.docs.length}");
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snaphot.docs) {
+      data.add(
+        FootballMatch(
+          id: doc.id,
+          is_running: doc.get('is_running'),
+          team1_name: doc.get('team1_name'),
+          team1_score: doc.get('team1_score'),
+          team2_name: doc.get('team2_name'),
+          team2_score: doc.get('team2_score'),
+          winner: doc.get('winner'),
+        ),
+      );
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Live Scores'),
+          backgroundColor: Colors.amber,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.separated(
+                itemBuilder: (context, index) => ListTile(
+                  title: Text(
+                    '${data[index].team1_name} vs ${data[index].team2_name}',
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.green,
+                    radius: 10,
+                  ),
+                  trailing: Text(
+                    '${data[index].team1_score}-${data[index].team2_score}',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                separatorBuilder: (context, index) => Divider(),
+                itemCount: data.length,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FootballMatch {
+  final String id;
+  final bool is_running;
+  final String team1_name;
+  final int team1_score;
+  final String team2_name;
+  final int team2_score;
+  final String winner;
+
+  FootballMatch({
+    required this.id,
+    required this.is_running,
+    required this.team1_name,
+    required this.team1_score,
+    required this.team2_name,
+    required this.team2_score,
+    required this.winner,
+  });
+}
