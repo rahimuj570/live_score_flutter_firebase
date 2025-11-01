@@ -1,17 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:live_score_app2/login_screen.dart';
+import 'package:live_score_app2/home_screen.dart';
+import 'package:live_score_app2/signup_screen.dart';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailTEC = TextEditingController();
   final TextEditingController passwordTEC = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -44,9 +44,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     }
                   },
                 ),
+
                 TextFormField(
-                  textInputAction: TextInputAction.next,
                   controller: passwordTEC,
+                  textInputAction: TextInputAction.done,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: InputDecoration(label: Text('Password')),
                   validator: (value) {
                     if (value!.isEmpty) {
@@ -56,25 +58,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     }
                   },
                 ),
-                TextFormField(
-                  textInputAction: TextInputAction.done,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  decoration: InputDecoration(label: Text('Confirm Password')),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Must Input Password";
-                    } else if (passwordTEC.text != value) {
-                      return "Password is not matched";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
                 SizedBox(height: 16),
                 FilledButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      signUp();
+                      login();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -82,13 +70,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(),
                   ),
-                  child: Text('Sign up'),
+                  child: Text('Login'),
                 ),
                 SizedBox(height: 20),
                 RichText(
                   text: TextSpan(
                     style: TextStyle(color: Colors.black, fontSize: 20),
-                    text: 'Already have an account?',
+                    text: 'Do not have an account?',
                     children: [
                       TextSpan(
                         children: [
@@ -102,7 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => LoginScreen(),
+                                    builder: (context) => SignupScreen(),
                                   ),
                                 );
                               },
@@ -120,49 +108,31 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Future<void> signUp() async {
+  Future<void> login() async {
     try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: emailTEC.text,
-            password: passwordTEC.text,
-          );
-      if (credential.user?.uid == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('failed to register')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('successfully registered'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailTEC.text.trim(),
+        password: passwordTEC.text,
+      );
+
+      // print(emailTEC.text);
+      // print(passwordTEC.text);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
+      if (e.code == 'invalid-credential') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The password provided is too weak.')),
-        );
-      } else if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The account already exists for that email.')),
+          SnackBar(content: Text('No user found for that email.')),
         );
       } else if (e.code == 'invalid-email') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The email address is invalid.')),
+          SnackBar(content: Text('Wrong email provided for that user.')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message ?? 'An unknown Firebase error occurred.'),
-          ),
-        );
+        print("sssssssssssssssssssssss:  " + e.toString());
       }
-    } on Exception catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 }
