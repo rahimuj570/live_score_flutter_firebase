@@ -16,8 +16,12 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchData();
   }
 
+  bool isFetching = false;
   final List<FootballMatch> data = [];
   Future<void> fetchData() async {
+    setState(() {
+      isFetching = true;
+    });
     data.clear();
     final snaphot = await FirebaseFirestore.instance
         .collection('football_score')
@@ -36,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
           winner: doc.get('winner'),
         ),
       );
-      setState(() {});
+      setState(() {
+        isFetching = false;
+      });
     }
   }
 
@@ -48,28 +54,37 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text('Live Scores'),
           backgroundColor: Colors.amber,
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.separated(
-                itemBuilder: (context, index) => ListTile(
-                  title: Text(
-                    '${data[index].team1_name} vs ${data[index].team2_name}',
+        body: Visibility(
+          visible: !isFetching,
+          replacement: Center(child: CircularProgressIndicator()),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.separated(
+                  itemBuilder: (context, index) => ListTile(
+                    subtitle: Text(
+                      'Winner: ${data[index].winner.isNotEmpty ? data[index].winner : 'N/A'}',
+                    ),
+                    title: Text(
+                      '${data[index].team1_name} vs ${data[index].team2_name}',
+                    ),
+                    leading: CircleAvatar(
+                      backgroundColor: data[index].is_running
+                          ? Colors.green
+                          : Colors.grey,
+                      radius: 10,
+                    ),
+                    trailing: Text(
+                      '${data[index].team1_score}-${data[index].team2_score}',
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green,
-                    radius: 10,
-                  ),
-                  trailing: Text(
-                    '${data[index].team1_score}-${data[index].team2_score}',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  separatorBuilder: (context, index) => Divider(),
+                  itemCount: data.length,
                 ),
-                separatorBuilder: (context, index) => Divider(),
-                itemCount: data.length,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
