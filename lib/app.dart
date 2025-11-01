@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:live_score_app2/home_screen.dart';
+import 'package:live_score_app2/signup_screen.dart';
 
 class LiveScoreApp extends StatefulWidget {
   const LiveScoreApp({super.key});
@@ -11,6 +11,6 @@ class LiveScoreApp extends StatefulWidget {
 class _LiveScoreAppState extends State<LiveScoreApp> {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: HomeScreen());
+    return const MaterialApp(home: SignupScreen());
   }
 }
